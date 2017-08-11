@@ -8,7 +8,7 @@ Created on Fri Aug 11 10:04:09 2017
 import pyodbc
 import logging
 import pandas as pd
-
+import sklearn.model_selection as cv
 
 
 class Helper:
@@ -23,7 +23,7 @@ class Helper:
             self.data = myfile.read();
             return self.data
         
-    def readData(self, sql, temp_dir):
+    def readData(self, sql):
         '''
             Returns Dataframe and Data type dataframe
         '''
@@ -35,6 +35,12 @@ class Helper:
         dtype_df.columns = ["Count", "Column Type"]
         print(dtype_df)
         return df, dtype_df
+    
+    def splitData(self, df, trainsize):
+        train, test = cv.train_test_split(df, train_size = trainsize)
+        return train, test
+        
+        
    
     
     def closeLogger(self):
