@@ -31,9 +31,11 @@ class Helper:
         cnxn = pyodbc.connect(self.databasecon)   
         df = pd.read_sql(sql, cnxn)
         logging.info('Data read complete...')
+        logging.info('Read: ' + str(df.shape[0]) + ' rows.')
         dtype_df = df.dtypes.reset_index()
         dtype_df.columns = ["Count", "Column Type"]
         print(dtype_df)
+        
         return df, dtype_df
     
     def splitData(self, df, trainsize):
