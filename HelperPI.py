@@ -39,6 +39,12 @@ class Helper:
         
         return df, dtype_df
     
+    def getDtypes(self, data):
+        dtype_df = data.dtypes.reset_index()
+        dtype_df.columns = ["Count", "Column Type"]
+        print(dtype_df)
+        return dtype_df
+    
     def splitData(self, df, trainsize):
         train, test = cv.train_test_split(df, train_size = trainsize)
         return train, test
