@@ -10,7 +10,8 @@ import pyodbc
 import logging
 import pandas as pd
 import sklearn.model_selection as cv
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import roc_auc_score, accuracy_score
+import xgboost as xgb
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -44,14 +45,25 @@ class Helper:
         return df, dtype_df
     
     def getDtypes(self, data):
+        logging.info('Getting data types...')
         dtype_df = data.dtypes.reset_index()
         dtype_df.columns = ["Count", "Column Type"]
         print(dtype_df)
         return dtype_df
     
     def splitData(self, df, trainsize):
+        """
+            Splits a single DataFrame into a train and test frame.
+        """
         train, test = cv.train_test_split(df, train_size = trainsize)
         return train, test
+    
+    def splitData2(self, X, y, testsize=0.3, random_state=0):
+        """
+            Takes an X and y dataframe and returns 4 np arrays
+        """
+        train_X, test_X, train_y, test_y = cv.train_test_split(X, y, test_size=testsize, random_state=random_state)
+        return  train_X, test_X, train_y, test_y
     
     def plot_confusion_matrix(cm, classes,
                               normalize=False,
@@ -92,3 +104,27 @@ class Helper:
     
     def closeLogger(self):
         logging.shutdown()
+
+    def modelfit(alg, dtrain, dlabels, feature_names, useTrainCV=True, cv_folds=5, early_stopping_rounds=50):
+
+        if useTrainCV:
+            xgb_param = alg.get_xgb_params()
+            xgtrain = xgb.DMatrix(dtrain.values, label=dlabels.values, feature_names = feature_names)
+            cvresult = xgb.cv(xgb_param, xgtrain, num_boost_round=alg.get_params()['n_estimators'], nfold=cv_folds,
+                              metrics='auc', early_stopping_rounds=early_stopping_rounds, verbose_eval=False)
+            alg.set_params(n_estimators=cvresult.shape[0])
+    
+        alg.fit(dtrain, dlabels, eval_metric='auc')
+    
+        dtrain_predictions = alg.predict(dtrain)
+        dtrain_predprob = alg.predict_proba(dtrain)[:,1]
+    
+        #Print model report:
+        print("\nModel Report")
+        print("Accuracy : %.4g" % accuracy_score(dlabels.values, dtrain_predictions))
+        print("AUC Score (Train): %f" % roc_auc_score(dlabels.values, dtrain_predprob))
+    
+        feat_imp = pd.Series(alg.booster().get_fscore()).sort_values(ascending=False)
+        feat_imp.plot(kind='bar', title='Feature Importances')
+        plt.ylabel('Feature Importance Score')
+        
