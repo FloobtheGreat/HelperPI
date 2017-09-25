@@ -14,7 +14,9 @@ from sklearn.metrics import roc_auc_score, accuracy_score
 import xgboost as xgb
 import matplotlib.pyplot as plt
 import numpy as np
-
+import tempfile
+import shutil
+import csv
 
 
 class Helper:
@@ -43,6 +45,30 @@ class Helper:
         print(dtype_df)
         
         return df, dtype_df
+    
+    def readDataToCSV(self, sql, directory):
+        logging.info('Writing data to temp csv...')
+        filename = directory+'\\file.csv'
+        cnxn = pyodbc.connect(self.databasecon)
+        cursor = cnxn.cursor()
+        cursor.execute(sql)
+        
+        with open(filename, 'a+') as f:
+            writ = csv.writer(f)
+            for row in  cursor.fetchall():
+                writ.writerow(str(row))
+                
+        logging.info('Finished writing data to ' + filename)
+        return filename
+    
+    def makeTempDir(self):
+        logging.info('Making Temp Directory...')
+        tmp = tempfile.mkdtemp()
+        return tmp
+    
+    def deleteTemp(self, temp_dir):
+        logging.info('Deleting Temp Directory...')
+        shutil.rmtree(temp_dir) 
     
     def getDtypes(self, data):
         logging.info('Getting data types...')
