@@ -68,7 +68,10 @@ class Helper:
     
     def deleteTemp(self, temp_dir):
         logging.info('Deleting Temp Directory...')
-        shutil.rmtree(temp_dir) 
+        try:
+            shutil.rmtree(temp_dir) 
+        except:
+            logging.info('Directory already deleted!.')
     
     def getDtypes(self, data):
         logging.info('Getting data types...')
