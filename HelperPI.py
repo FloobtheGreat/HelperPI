@@ -10,14 +10,11 @@ import pyodbc
 import logging
 import pandas as pd
 import sklearn.model_selection as cv
-<<<<<<< HEAD
 import scipy.stats as stats
 from sklearn.metrics import roc_auc_score, accuracy_score
-=======
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import roc_auc_score, accuracy_score, r2_score
 import scipy.stats as stats
->>>>>>> de5936f2cb3cfd5b37b0250e74ee81db1e0bd7c9
 import xgboost as xgb
 import matplotlib.pyplot as plt
 import numpy as np
@@ -156,8 +153,6 @@ class Helper:
                   np.std(gs.cv_results_['mean_test_score'])))
         print("Parameters: {0}".format(gs.best_params_))
        
-
-<<<<<<< HEAD
         
     def calc_VIFs(self, X):
         vif = pd.DataFrame()
@@ -166,7 +161,26 @@ class Helper:
         
         vif.sort_values(by='VIF Factor', ascending=False, inplace=True)
         return vif
-   
+    
+    
+    
+    def find_iteractions(self, X, y):
+         result = list()
+         for var1 in X.columns:
+             for var2 in X.columns:
+                 if var1 != var2:
+                     vardf = X[var1]*X[var2]
+                     coef, pval = stats.pearsonr(vardf.values, y)
+                     if pval <= 0.05:
+                         lin = LinearRegression()
+                         lin.fit(vardf.values.reshape(-1,1), y)
+                         ytrue = y
+                         ypred = lin.predict(vardf.values.reshape(-1,1))
+                         r2 = r2_score(ytrue, ypred)
+                         result.append([var1+'*'+var2,coef, pval, r2])
+                     
+         final = pd.DataFrame(result, columns = ['name','coef','pval','r2'])
+         print(final)
 
         
         
