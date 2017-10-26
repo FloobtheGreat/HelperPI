@@ -10,6 +10,7 @@ import pyodbc
 import logging
 import pandas as pd
 import sklearn.model_selection as cv
+import scipy.stats as stats
 from sklearn.metrics import roc_auc_score, accuracy_score
 import xgboost as xgb
 import matplotlib.pyplot as plt
@@ -17,6 +18,10 @@ import numpy as np
 import tempfile
 import shutil
 import csv
+import math
+from operator import itemgetter
+from time import time
+from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 
 class Helper:
@@ -133,27 +138,56 @@ class Helper:
     
     def closeLogger(self):
         logging.shutdown()
-
-    def modelfit(alg, dtrain, dlabels, feature_names, useTrainCV=True, cv_folds=5, early_stopping_rounds=50):
-
-        if useTrainCV:
-            xgb_param = alg.get_xgb_params()
-            xgtrain = xgb.DMatrix(dtrain.values, label=dlabels.values, feature_names = feature_names)
-            cvresult = xgb.cv(xgb_param, xgtrain, num_boost_round=alg.get_params()['n_estimators'], nfold=cv_folds,
-                              metrics='auc', early_stopping_rounds=early_stopping_rounds, verbose_eval=False)
-            alg.set_params(n_estimators=cvresult.shape[0])
-    
-        alg.fit(dtrain, dlabels, eval_metric='auc')
-    
-        dtrain_predictions = alg.predict(dtrain)
-        dtrain_predprob = alg.predict_proba(dtrain)[:,1]
-    
-        #Print model report:
-        print("\nModel Report")
-        print("Accuracy : %.4g" % accuracy_score(dlabels.values, dtrain_predictions))
-        print("AUC Score (Train): %f" % roc_auc_score(dlabels.values, dtrain_predprob))
-    
-        feat_imp = pd.Series(alg.booster().get_fscore()).sort_values(ascending=False)
-        feat_imp.plot(kind='bar', title='Feature Importances')
-        plt.ylabel('Feature Importance Score')
         
+
+    def report(self, gs):
+        """
+        Utility function to report best scores
+        from a grid search
+        """
+        print("Best Mean validation score: {0:.3f} (std: {1:.3f})".format(
+                  gs.best_score_,
+                  np.std(gs.cv_results_['mean_test_score'])))
+        print("Parameters: {0}".format(gs.best_params_))
+       
+
+        
+    def calc_VIFs(self, X):
+        vif = pd.DataFrame()
+        vif['VIF Factor'] = [variance_inflation_factor(X.values, i) for i in range(X.shape[1])]
+        vif['feature'] = X.columns
+        
+        vif.sort_values(by='VIF Factor', ascending=False, inplace=True)
+        return vif
+   
+
+        
+        
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+ 
