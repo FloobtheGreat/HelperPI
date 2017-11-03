@@ -171,7 +171,7 @@ class Helper:
                  if var1 != var2:
                      vardf = X[var1]*X[var2]
                      coef, pval = stats.pearsonr(vardf.values, y)
-                     if pval <= 0.05:
+                     if pval <= 0.005 and coef >= 0.2:
                          lin = LinearRegression()
                          lin.fit(vardf.values.reshape(-1,1), y)
                          ytrue = y
@@ -179,76 +179,5 @@ class Helper:
                          r2 = r2_score(ytrue, ypred)
                          result.append([var1+'*'+var2,coef, pval, r2])
                      
-         final = pd.DataFrame(result, columns = ['name','coef','pval','r2'])
-         print(final)
-
-        
-        
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
- 
-=======
-        if useTrainCV:
-            xgb_param = alg.get_xgb_params()
-            xgtrain = xgb.DMatrix(dtrain.values, label=dlabels.values, feature_names = feature_names)
-            cvresult = xgb.cv(xgb_param, xgtrain, num_boost_round=alg.get_params()['n_estimators'], nfold=cv_folds,
-                              metrics='auc', early_stopping_rounds=early_stopping_rounds, verbose_eval=False)
-            alg.set_params(n_estimators=cvresult.shape[0])
-    
-        alg.fit(dtrain, dlabels, eval_metric='auc')
-    
-        dtrain_predictions = alg.predict(dtrain)
-        dtrain_predprob = alg.predict_proba(dtrain)[:,1]
-    
-        #Print model report:
-        print("\nModel Report")
-        print("Accuracy : %.4g" % accuracy_score(dlabels.values, dtrain_predictions))
-        print("AUC Score (Train): %f" % roc_auc_score(dlabels.values, dtrain_predprob))
-    
-        feat_imp = pd.Series(alg.booster().get_fscore()).sort_values(ascending=False)
-        feat_imp.plot(kind='bar', title='Feature Importances')
-        plt.ylabel('Feature Importance Score')
-        
-    def find_iteractions(self, X, y):
-        result = list()
-        for var1 in X.columns:
-            for var2 in X.columns:
-                if var1 != var2:
-                    vardf = X[var1]*X[var2]
-                    coef, pval = stats.pearsonr(vardf.values, y)
-                    if pval <= 0.05:
-                        lin = LinearRegression()
-                        lin.fit(vardf.values.reshape(-1,1), y)
-                        ytrue = y
-                        ypred = lin.predict(vardf.values.reshape(-1,1))
-                        r2 = r2_score(ytrue, ypred)
-                        result.append([var1+'*'+var2,coef, pval, r2])
-                    
-        final = pd.DataFrame(result, columns = ['name','coef','pval','r2'])
-        print(final)
->>>>>>> de5936f2cb3cfd5b37b0250e74ee81db1e0bd7c9
+         return pd.DataFrame(result, columns = ['name','coef','pval','r2'])
+         
